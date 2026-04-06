@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Dashboard UI</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app">
+        <div class="topbar">
+            <div style="display:flex;align-items:center;gap:16px;">
+                <div class="logo">Ledger <span>Personal Finance</span></div>
+                <div class="nav">
+                    <button class="nav-btn active" onclick="showPage('dashboard')">Overview</button>
+                    <button class="nav-btn" onclick="showPage('transactions')">Transactions</button>
+                    <button class="nav-btn" onclick="showPage('insights')">Insights</button>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <span id="role-badge" class="role-badge admin">Admin</span>
+                <select class="role-select" id="role-select" onchange="setRole(this.value)">
+                    <option value="admin">Admin</option>
+                    <option value="viewer">Viewer</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="main">
+
+            <div class="page active" id="page-dashboard">
+                <div class="section-title">Good morning.</div>
+                <div class="section-sub">Here's your financial snapshot for April 2026.</div>
+
+                <div class="cards-grid" id="summary-cards"></div>
+
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <div class="chart-title">Balance Trend — last 6 months</div>
+                        <div class="chart-wrap" style="height:220px;"><canvas id="trendChart"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">Spending by Category</div>
+                        <div id="donut-legend" style="margin-bottom:10px;"></div>
+                        <div class="chart-wrap" style="height:190px;"><canvas id="donutChart"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="chart-card" style="margin-bottom:24px;">
+                    <div class="chart-title">Monthly Income vs Expenses</div>
+                    <div class="chart-wrap" style="height:200px;"><canvas id="barChart"></canvas></div>
+                </div>
+            </div>
+
+            <div class="page" id="page-transactions">
+                <div class="section-title">Transactions</div>
+                <div class="section-sub">Browse, filter and search your financial activity.</div>
+
+                <div class="toolbar">
+                    <input class="search-box" type="text" id="search-input" placeholder="Search transactions..."
+                        oninput="filterTx()">
+                    <div id="type-filters" style="display:flex;gap:6px;flex-wrap:wrap;">
+                        <button class="filter-btn active" onclick="setTypeFilter('all', this)">All</button>
+                        <button class="filter-btn" onclick="setTypeFilter('income', this)">Income</button>
+                        <button class="filter-btn" onclick="setTypeFilter('expense', this)">Expenses</button>
+                    </div>
+                    <select class="sort-sel" id="sort-sel" onchange="filterTx()">
+                        <option value="date-desc">Newest first</option>
+                        <option value="date-asc">Oldest first</option>
+                        <option value="amt-desc">Highest amount</option>
+                        <option value="amt-asc">Lowest amount</option>
+                    </select>
+                    <button class="add-btn" id="add-btn" onclick="openModal()">+ Add Transaction</button>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="tx-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Type</th>
+                                <th style="text-align:right;">Amount</th>
+                                <th id="actions-header" style="text-align:center;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tx-tbody"></tbody>
+                    </table>
+                    <div class="empty-state" id="empty-state" style="display:none;">
+                        <div class="e-icon">🔍</div>
+                        <p>No transactions match your filters.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page" id="page-insights">
+                <div class="section-title">Insights</div>
+                <div class="section-sub">Patterns and observations from your financial data.</div>
+                <div class="insights-grid" id="insights-grid"></div>
+
+                <div style="margin-top:24px;" class="chart-card">
+                    <div class="chart-title">Category Spending Breakdown</div>
+                    <div id="cat-breakdown"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal">
+            <div class="modal-title">New Transaction</div>
+            <div class="form-row">
+                <label class="form-label">Description</label>
+                <input class="form-input" id="f-desc" type="text" placeholder="e.g. Grocery shopping">
+            </div>
+            <div class="form-row-2">
+                <div>
+                    <label class="form-label">Amount (₹)</label>
+                    <input class="form-input" id="f-amount" type="number" placeholder="0">
+                </div>
+                <div>
+                    <label class="form-label">Date</label>
+                    <input class="form-input" id="f-date" type="date">
+                </div>
+            </div>
+            <div class="form-row-2">
+                <div>
+                    <label class="form-label">Type</label>
+                    <select class="form-input" id="f-type">
+                        <option value="expense">Expense</option>
+                        <option value="income">Income</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Category</label>
+                    <select class="form-input" id="f-cat">
+                        <option value="food">Food</option>
+                        <option value="transport">Transport</option>
+                        <option value="entertainment">Entertainment</option>
+                        <option value="health">Health</option>
+                        <option value="shopping">Shopping</option>
+                        <option value="utilities">Utilities</option>
+                        <option value="salary">Salary</option>
+                        <option value="freelance">Freelance</option>
+                        <option value="investment">Investment</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn-save" onclick="saveTransaction()">Save</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
